@@ -57,8 +57,6 @@ glm::mat4 model;
 glm::mat4 view;
 glm::mat4 projection;
 glm::mat4 lampModel;
-glm::mat4 lampView;
-glm::mat4 lampProjection;
 
 //DRAWING TEXT 
 bool show_text = true;
@@ -351,27 +349,27 @@ void initialize()
 	mainShader->setInt("Texture3", 2);
 
 	//do oœwietlenia
-	mainShader->setInt("material.diffuse", 0);
+	//mainShader->setInt("material.diffuse", 0);
 	//mainShader->setInt("material.specular", 1);
 
 	//jeszcze pozycja kamery - powinno byæ camera.Position
 	mainShader->setVec3("viewPos", glm::vec3(0.0f, 0.0f, 0.0f));
-	mainShader->setFloat("material.shininess", 32.0f);		//im wy¿sza wartoœæ tym bardziej odbija œwiat³o zamiast rozpraszaæ 
+	mainShader->setFloat("material.rozblysk", 32.0f);		//im wy¿sza wartoœæ tym bardziej odbija œwiat³o zamiast rozpraszaæ 
 
 	//do oœwietlenia directional (typu s³oñce)
 	mainShader->setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
-	mainShader->setVec3("dirLight.ambient", 0.25f, 0.25f, 0.25f);
-	mainShader->setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-	mainShader->setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+	mainShader->setVec3("dirLight.otoczenie", 0.25f, 0.25f, 0.25f);
+	mainShader->setVec3("dirLight.rozproszone", 0.4f, 0.4f, 0.4f);
+	mainShader->setVec3("dirLight.lustrzane", 0.5f, 0.5f, 0.5f);
 
 	//do oœwietlenia punktowego
-	mainShader->setVec3("pointLights[0].position", glm::vec3(1.5f, 1.0f, 5.0f));		//œwieci w lewym górnym rogu planszy, widoczne na snake'u	//glm::vec3(1.2f, 1.0f, 2.0f));
-	mainShader->setVec3("pointLights[0].ambient", 0.25f, 0.25f, 0.25f);
-	mainShader->setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
-	mainShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-	mainShader->setFloat("pointLights[0].constant", 1.0f);
-	mainShader->setFloat("pointLights[0].linear", 0.35);		//0.35
-	mainShader->setFloat("pointLights[0].quadratic", 0.44);		//0.44
+	mainShader->setVec3("pointLights.pozycja", glm::vec3(1.5f, 1.0f, 5.0f));		//jesli wiecej to jako tablica	//glm::vec3(1.2f, 1.0f, 2.0f));
+	mainShader->setVec3("pointLights.otoczenie", 0.25f, 0.25f, 0.25f);
+	mainShader->setVec3("pointLights.rozproszone", 0.8f, 0.8f, 0.8f);
+	mainShader->setVec3("pointLights.lustrzane", 1.0f, 1.0f, 1.0f);
+	mainShader->setFloat("pointLights.constant", 1.0f);
+	mainShader->setFloat("pointLights.linear", 0.35);		//0.35
+	mainShader->setFloat("pointLights.quadratic", 0.44);		//0.44
 
 
 	game_over = false;
@@ -395,10 +393,6 @@ void initialize()
 	
 	lampShader = new Shader("lamp_vertex_shader.glsl", "lamp_fragment_shader.glsl");
 	lampShader->use();
-	/*lampProjection = glm::perspective(glm::radians(45.0f), (float(SCR_WIDTH) / float(SCR_HEIGHT)), 0.1f, 100.0f);
-	lampView = glm::mat4(1.0f);
-	lampView = glm::translate(lampView, glm::vec3(-1.0f * (game_board->getDimensions().x / 2), 3.0f, (-3.0f * game_board->getDimensions().z)));
-	lampView = glm::rotate(lampView, glm::radians(45.0f), glm::vec3(1.0f, 0.0f, 0.0f));*/
 
 	lampModel = glm::mat4(1.0f);
 	lampModel = glm::translate(lampModel, glm::vec3(1.2f, 1.0f, 2.0f));

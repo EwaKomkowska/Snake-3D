@@ -1,5 +1,9 @@
 #include "food.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 
 //TODO: what kind of position
 Food::Food()

@@ -3,39 +3,34 @@ out vec4 FragColor;
 
  struct Material {
 	//sampler2D diffuse;	//to jest nasza textura, kolor dla oœwietlenia rozproszonego
-	vec3 specular;		//wp³yw œwiat³a lustrzanego
-	float shininess;	//promieñ rozb³ysku
+	vec3 lustrzane;			//wp³yw œwiat³a lustrzanego
+	float rozblysk;			//promieñ rozb³ysku
 };
 
 struct DirLight {
 	vec3 direction;
-
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
+	vec3 otoczenie;
+	vec3 rozproszone;
+	vec3 lustrzane;		//oœwietlenie zwierciadlane
 };
 
 struct PointLight {
-	vec3 position;
-
+	vec3 pozycja;
+	vec3 otoczenie;
+	vec3 rozproszone;
+	vec3 lustrzane;
 	float constant;
 	float linear;
 	float quadratic;
-
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
 };
 
-#define NR_POINT_LIGHTS 1
-
 in vec3 FragPos;
-in vec2 TexCoords;
+in vec2 TexCoord;
 in vec3 Normal;
 
 uniform vec3 viewPos;
 uniform DirLight dirLight;
-uniform PointLight pointLights[NR_POINT_LIGHTS];
+uniform PointLight pointLights;					//ile ma byc swiatel, jesli wiecej to tablica
 uniform Material material;
 
 uniform sampler2D Texture1;
@@ -45,8 +40,8 @@ uniform sampler2D Texture3;
 uniform int textureChoice;
 //uniform float texMix; wspolczynnik mieszania textur do FragColor = mix(texture(Texture1, TexCoord), texture(Texture2, TexCoord), texMix);
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, sampler2D diffuseTexture);
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, sampler2D diffuseTexture);
+vec3 swiatloKierunkowe(DirLight light, vec3 normal, vec3 viewDir, sampler2D diffuseTexture);
+vec3 swiatloPunktowe(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, sampler2D diffuseTexture);
 
 
 void main()
@@ -58,57 +53,60 @@ void main()
 
 	//tego nie ma i by³o textCoords
 	if(textureChoice == 1){
-		//FragColor = texture(Texture1, TexCoords);
-		result = CalcDirLight(dirLight, norm, viewDir, Texture1);
-		for(int i = 0; i < NR_POINT_LIGHTS; i++)
-			result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, Texture1);
+		result = swiatloKierunkowe(dirLight, norm, viewDir, Texture1);
+		result += swiatloPunktowe(pointLights, norm, FragPos, viewDir, Texture1);
 		}
 	else if (textureChoice == 2){
-		//FragColor = texture(Texture2, TexCoords);
-		result = CalcDirLight(dirLight, norm, viewDir, Texture2);
-		for(int i = 0; i < NR_POINT_LIGHTS; i++)
-			result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, Texture2);
+		result = swiatloKierunkowe(dirLight, norm, viewDir, Texture2);
+		result += swiatloPunktowe(pointLights, norm, FragPos, viewDir, Texture2);
 		}
 	else if	(textureChoice == 3){
-		//FragColor = texture(Texture3, TexCoords);
-		result = CalcDirLight(dirLight, norm, viewDir, Texture3);
-		for(int i = 0; i < NR_POINT_LIGHTS; i++)
-			result += CalcPointLight(pointLights[i], norm, FragPos, viewDir, Texture3);
+		result = swiatloKierunkowe(dirLight, norm, viewDir, Texture3);
+		result += swiatloPunktowe(pointLights, norm, FragPos, viewDir, Texture3);
 		}
 	
 	FragColor = vec4(result, 1.0);
 }
 
-vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, sampler2D diffuseTexture) 
+vec3 swiatloKierunkowe(DirLight light, vec3 normal, vec3 viewDir, sampler2D diffuseTexture) 
 {
+	//rozproszone - wspolczynnik
 	vec3 lightDir = normalize(-light.direction);
 	float diff = max(dot(normal, lightDir), 0.0);
 
+	//zwierciadlane - wspolczynnik
 	vec3 reflectDir = reflect(-lightDir, normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.rozblysk);
 
-	vec3 ambient = light.ambient * vec3(texture(diffuseTexture, TexCoords));
-	vec3 diffuse = light.diffuse * diff * vec3(texture(diffuseTexture, TexCoords));
-	vec3 specular = light.specular * spec * material.specular;
+	//koncowe wartosci
+	vec3 ambient = light.otoczenie * vec3(texture(diffuseTexture, TexCoord));
+	vec3 diffuse = light.rozproszone * diff * vec3(texture(diffuseTexture, TexCoord));
+	vec3 specular = light.lustrzane * spec * material.lustrzane;
 
 	return (ambient + diffuse + specular);
 }
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, sampler2D diffuseTexture)
+vec3 swiatloPunktowe(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, sampler2D diffuseTexture)
 {
-    vec3 lightDir = normalize(light.position - fragPos);
-
+    vec3 lightDir = normalize(light.pozycja - fragPos);
+	
+	//rozproszone - wspolczynnik
     float diff = max(dot(normal, lightDir), 0.0);
   
+	//zwierciadlane - wspolczynnik	
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.rozblysk);
    
-    float distance = length(light.position - fragPos);
+	//wygaszanie swiatla - stale ze wzorow
+    float distance = length(light.pozycja - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));    
    
-    vec3 ambient = light.ambient * vec3(texture(diffuseTexture, TexCoords));
-    vec3 diffuse = light.diffuse * diff * vec3(texture(diffuseTexture, TexCoords));
-    vec3 specular = light.specular * spec * material.specular;
+    //koncowe wartosci
+    vec3 ambient = light.otoczenie * vec3(texture(diffuseTexture, TexCoord));
+    vec3 diffuse = light.rozproszone * diff * vec3(texture(diffuseTexture, TexCoord));
+    vec3 specular = light.lustrzane * spec * material.lustrzane;
+
+	//koncowy efekt wygaszania
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *= attenuation;
