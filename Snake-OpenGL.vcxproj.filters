@@ -39,12 +39,21 @@
     <ClCompile Include="board.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="light_source.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="fragment_shader.glsl">
       <Filter>Header Files</Filter>
     </None>
     <None Include="vertex_shader.glsl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="lamp_fragment_shader.glsl">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="lamp_vertex_shader.glsl">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>
@@ -77,6 +86,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="food.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="light_source.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
